@@ -59,19 +59,24 @@ function checkDb() {
 				if (row.theType == "DNS") dns_issues++;
 				if (row.theType == "HTTP") http_issues++;
 			});
-			var firstDate = new Date(parseFloat(rows[0].theDate)).toLocaleString();
-			var lastDate = new Date(parseFloat(rows[rows.length-1].theDate)).toLocaleString();
+			var firstDate = new Date(parseFloat(rows[0].theDate));
+			var lastDate = new Date(parseFloat(rows[rows.length-1].theDate));
+			var diff = (lastDate.getTime() - firstDate.getTime()) / (1000*60);   // now - Feb 1
 
-			var msg = "There were " + rows.length + " instances of network unavailability from " +
-				 firstDate + " to " + lastDate + "\n\nDNS: " + dns_issues + "\nHTTP: " + http_issues;
+			var msg = "There were " + rows.length + " instances (" + parseFloat(diff).toFixed(2) + " min) of network unavailability from " +
+				 firstDate.toLocaleString() + " to " + lastDate.toLocaleString() + "\n\nDNS: " + dns_issues + "\nHTTP: " + http_issues;
 
 			console.log("Pushing multiple downtimes to Boxcar.");
 			provider.broadcast(msg, "Comcast Check");
 		}
 		else if (rows.length == 1) {
-			var date = new Date(parseFloat(rows[0].theDate)).toLocaleString();
+			var firstDate = new Date(parseFloat(rows[0].theDate));
+			var lastDate = new Date();
+			var diff = (lastDate.getTime() - firstDate.getTime()) / (1000*60);   // now - Feb 1
+			
 			console.log("Pushing one downtime to Boxcar.");
-			provider.broadcast("There was an instance of " + rows[0].theType + " network unavailability at " + date, "Comcast Check");
+			provider.broadcast("There was an instance of " + rows[0].theType +
+				" (" + parseFloat(diff).toFixed(2) + " min) network unavailability at " + date.toLocaleString(), "Comcast Check");
 		}
 		else {
 			console.log("No downtime found, not pushing to Boxcar.");
